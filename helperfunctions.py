@@ -14,11 +14,11 @@ telegraph.create_account(short_name='file-converter')
 
 # pyinstaller compile
 def pyinstallcommand(message,inputt):
-    ofold = str(message.id) + "/"
-    tfold = str(message.id) + "t/"
+    ofold = f"{str(message.id)}/"
+    tfold = f"{str(message.id)}t/"
     basename = inputt.split("/")[-1].split(".")[0]
     out = ofold + basename
-    temp = basename + ".spec"
+    temp = f"{basename}.spec"
     cmd = f'pyinstaller --onefile --distpath {ofold} --workpath {tfold} {inputt}'
     return cmd, out, ofold, tfold, temp
 
@@ -53,60 +53,52 @@ def warpcommand(inputt,message,optimize=False):
 
 # ctmconv 3d file cmd
 def ctm3dcommand(inputt,output):
-    cmd = f'ctmconv {inputt} {output}'
-    return cmd
+    return f'ctmconv {inputt} {output}'
 
 
 # ttconv subtiles cmd
 def subtitlescommand(inputt,output):
-    cmd = f'tt convert -i {inputt} -o {output}'
-    return cmd
+    return f'tt convert -i {inputt} -o {output}'
 
 
 # calibre cmd
 def calibrecommand(inputt,output):
-    cmd = f'ebook-convert "{inputt}" "{output}" --enable-heuristics'
-    return cmd
+    return f'ebook-convert "{inputt}" "{output}" --enable-heuristics'
 
 
 # fontforge cmd
 def fontforgecommand(inputt,output,message):
-    des = dirPath + f"/{output}"
-    cdes = dirPath + f"/{message.id}-convert.pe"
+    des = f"{dirPath}/{output}"
+    cdes = f"{dirPath}/{message.id}-convert.pe"
     text = f'Open(\'{inputt}\')\nGenerate(\'{des}\')'
     with open(f"{message.id}-convert.pe","w") as file:
         file.write(text)
     os.system(f"chmod 777 {message.id}-convert.pe")
-    #cmd = f'{fontforge} --appimage-extract-and-run -script "{cdes}"'
-    cmd = f'fontforge -script "{cdes}"'
-    return cmd
+    return f'fontforge -script "{cdes}"'
 
 
 # libreoffice cmd
 def libreofficecommand(inputt,new):
-    #cmd = f'{libreoffice} --appimage-extract-and-run --headless --convert-to "{new}" "{inputt}" --outdir "{dirPath}"'
-    if inputt.split(".")[-1] == 'pdf':
-        cmd = f'libreoffice --infilter=="writer_pdf_import" --headless --convert-to "{new}":"writer_pdf_Export" "{inputt}" --outdir "{dirPath}"'
-    else:
-        cmd = f'libreoffice --headless --convert-to "{new}" "{inputt}" --outdir "{dirPath}"'
-    return cmd
+    return (
+        f'libreoffice --infilter=="writer_pdf_import" --headless --convert-to "{new}":"writer_pdf_Export" "{inputt}" --outdir "{dirPath}"'
+        if inputt.split(".")[-1] == 'pdf'
+        else f'libreoffice --headless --convert-to "{new}" "{inputt}" --outdir "{dirPath}"'
+    )
 
 
 # tesseract cmd
 def tesrctcommand(inputt,out):
-    #cmd = f'{tesseract} --appimage-extract-and-run "{inputt}" "{output}"'
-    cmd = f'tesseract "{inputt}" {out}'
-    return cmd
+    return f'tesseract "{inputt}" {out}'
 
 
 # ffmpeg cmd
 def ffmpegcommand(inputt,output,new):
-    #cmd = f'{ffmpeg} -i "{inputt}" "{output}"'
-    if new in  ["mp4", "mkv", "mov"] and not (new == "mov" and ".webm" in inputt):
-        cmd = f'ffmpeg -i "{inputt}" -c copy "{output}"'
-    else:
-        cmd = f'ffmpeg -i "{inputt}" "{output}"'
-    return cmd
+    return (
+        f'ffmpeg -i "{inputt}" -c copy "{output}"'
+        if new in ["mp4", "mkv", "mov"]
+        and (new != "mov" or ".webm" not in inputt)
+        else f'ffmpeg -i "{inputt}" "{output}"'
+    )
 
 
 # magic cmd (imagemagic)
@@ -136,8 +128,7 @@ def zipcommand(file,message):
 def absoluteFilePaths(directory):
     listt = []
     for dirpath,_,filenames in os.walk(directory):
-        for f in filenames:
-            listt.append(os.path.abspath(os.path.join(dirpath, f)))
+        listt.extend(os.path.abspath(os.path.join(dirpath, f)) for f in filenames)
     return listt
 
 
@@ -147,9 +138,9 @@ def updtname(inputt,new):
     inputt[-1] = new
     output = ""
     for ele in inputt:
-        output = output+"."+ele
+        output = f"{output}.{ele}"
     output = output[1:]
-    print(f'New Filename will be' )
+    print('New Filename will be')
     print(output)
     return output
 
@@ -212,7 +203,5 @@ def videoinfo(file):
 
 # list beautifier
 def give_name(data):
-    name = ""
-    for i in data:
-        name += ", " + str(i)
+    name = "".join(f", {str(i)}" for i in data)
     return name[2:]

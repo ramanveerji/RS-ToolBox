@@ -39,9 +39,7 @@ def get_media_info(path):
         print(f"get_media_info: {result}")
         return 0, None, None
 
-    duration = round(float(fields.get('duration', 0)))
-
-    return duration
+    return round(float(fields.get('duration', 0)))
 
 
 def allinfo(file,thumb=None):

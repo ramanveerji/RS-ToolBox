@@ -357,10 +357,7 @@ class Film(object):
             ]
         )
 
-        if self.color_stdev < 0.05:
-            return True
-
-        return False
+        return self.color_stdev < 0.05
 
     def analyze_black_reference(self):
         with Image(filename=self.blackref) as blackref_image:

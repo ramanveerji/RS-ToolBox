@@ -70,12 +70,11 @@ def follow(message,inputt,new,old,oldmessage):
             up(message,output,msg,capt=caption)
         else:
             app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-            
+
         if os.path.exists(output):
             os.remove(output)   
 
 
-    # images
     elif output.upper().endswith(IMG) and inputt.upper().endswith(IMG):
 
         print("It is IMG option")
@@ -102,20 +101,19 @@ def follow(message,inputt,new,old,oldmessage):
             os.remove(f"{message.id}.txt")
             if text != "":
                 app.send_message(message.chat.id, text, reply_to_message_id=message.id)
-            
+
         if new == "ico":
             slist = ["256", "128", "96", "64", "48", "32", "16"]
             for ele in slist:
                 toutput = helperfunctions.updtname(inputt,f"{ele}.png")
                 os.remove(toutput)
-        
+
         os.remove(file)
 
 
-    # stickers
     elif output.upper().endswith(IMG) and inputt.upper().endswith("TGS"):
 
-        if new == "webp" or new == "gif" or new == "png":
+        if new in ["webp", "gif", "png"]:
 
             print("It is Animated Sticker option")
             file = app.download_media(message)
@@ -133,12 +131,11 @@ def follow(message,inputt,new,old,oldmessage):
 
             if os.path.exists(output):
                 os.remove(output) 
-            
+
         else:
             app.send_message(message.chat.id,"__Only Availble Conversions for Animated Stickers are **GIF, PNG** and **WEBP**__", reply_to_message_id=message.id)
 
 
-    # ebooks
     elif output.upper().endswith(EB) and inputt.upper().endswith(EB):
 
         print("It is Ebook option")
@@ -152,14 +149,13 @@ def follow(message,inputt,new,old,oldmessage):
             app.send_document(message.chat.id, document=output, force_document=True, reply_to_message_id=message.id)
         else:
             app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-            
+
         if os.path.exists(output):
             os.remove(output) 
 
 
-    # libreoffice documents
     elif (output.upper().endswith(LBW) and inputt.upper().endswith(LBW)) or (output.upper().endswith(LBI) and inputt.upper().endswith(LBI)) or (output.upper().endswith(LBC) and inputt.upper().endswith(LBC)):
-        
+
         print("It is LibreOffice option")
         file = app.download_media(message)
         cmd = helperfunctions.libreofficecommand(file,new)
@@ -172,14 +168,13 @@ def follow(message,inputt,new,old,oldmessage):
             app.send_document(message.chat.id,document=output, force_document=True, reply_to_message_id=message.id)
         else:
             app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-        
+
         if os.path.exists(output):
             os.remove(output) 
 
 
-    # fonts
     elif output.upper().endswith(FF) and inputt.upper().endswith(FF):
-        
+
         print("It is FontForge option")
         file = app.download_media(message)
         cmd = helperfunctions.fontforgecommand(file,output,message)
@@ -192,15 +187,18 @@ def follow(message,inputt,new,old,oldmessage):
             app.send_document(message.chat.id,document=output, force_document=True, reply_to_message_id=message.id)
         else:
             app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-            
+
         if os.path.exists(output):
             os.remove(output) 
 
-    
-    # subtitles
+
     elif output.upper().endswith(SUB) and inputt.upper().endswith(SUB):
 
-        if not ((old.upper() in ["TTML", "SCC", "SRT"]) and (new.upper() in ["TTML","SRT", "VTT"])):
+        if old.upper() not in ["TTML", "SCC", "SRT"] or new.upper() not in [
+            "TTML",
+            "SRT",
+            "VTT",
+        ]:
             app.send_message(message.chat.id,f"__**{old.upper()}** to **{new.upper()}** is not Supported.\n\n**Supported Formats**\n**Inputs**: TTML, SCC & SRT\n**Outputs**: TTML, SRT & VTT__", reply_to_message_id=message.id)
 
         else:
@@ -215,12 +213,11 @@ def follow(message,inputt,new,old,oldmessage):
                 app.send_document(message.chat.id,document=output, force_document=True, reply_to_message_id=message.id)
             else:
                 app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-                
+
             if os.path.exists(output):
                 os.remove(output)
 
 
-    # programs
     elif output.upper().endswith(PRO) and inputt.upper().endswith(PRO):
 
         flag = 0
@@ -272,12 +269,11 @@ def follow(message,inputt,new,old,oldmessage):
                 if flag != 3:
                     errormessage = "Error while Conversion"
                 app.send_message(message.chat.id,f"__{errormessage}__", reply_to_message_id=message.id)
-                
+
             if os.path.exists(output):
                 os.remove(output)
 
 
-    # 3D files
     elif output.upper().endswith(T3D) and inputt.upper().endswith(T3D):
 
         if (old.upper() == "WRL"):
@@ -295,12 +291,11 @@ def follow(message,inputt,new,old,oldmessage):
                 app.send_document(message.chat.id,document=output, force_document=True, reply_to_message_id=message.id)
             else:
                 app.send_message(message.chat.id,"__Error while Conversion__", reply_to_message_id=message.id)
-                
+
             if os.path.exists(output):
                 os.remove(output)
 
 
-    # or else
     else:
         app.send_message(message.chat.id,"__Choose a Valid Extension, don't Type it__", reply_to_message_id=message.id)
 
@@ -632,11 +627,11 @@ def makefile(message,mtext,oldmessage):
     firstline = text[0]
     firstline = "".join( x for x in firstline if (x.isalnum() or x in "._-@ "))
     text.remove(text[0])
-    
+
     mtext = ""
     for ele in text: 
-        mtext = mtext + f"{ele}\n"
-    
+        mtext = f"{mtext}{ele}\n"
+
     with open(firstline,"w") as file:
         file.write(mtext)
 
@@ -745,7 +740,8 @@ def saverec(message):
 # AI chat
 def handleAIChat(message):
     hash = str(message.chat.id)
-    if hash[0] == "-": hash = str(hash)[1:]
+    if hash[0] == "-":
+        hash = hash[1:]
 
     app.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
     reply = aifunctions.chatWithAI(message.text, hash)
@@ -1051,15 +1047,14 @@ def send_gpt(client: pyrogram.client.Client,message: pyrogram.types.messages_and
 # Tic Tac Toe Game
 @app.on_message(filters.command("tictactoe"))
 def startTTT(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-	if message.chat.id == message.from_user.id: 
-		return tictactoe.TTTgame(app,None,message,1)
+    if message.chat.id == message.from_user.id:
+        return tictactoe.TTTgame(app,None,message,1)
 
-	else:
-		msg = app.send_message(message.chat.id, f'__Player 1 (X) : **{message.from_user.first_name}**__',
-		reply_markup=InlineKeyboardMarkup(
-		[[ InlineKeyboardButton( text='🤵 Player 2', callback_data="TTT P2")],
-		 [ InlineKeyboardButton( text='🤖 v/s AI', callback_data="TTT AI")]]))
-		tictactoe.TTTstoredata(msg.id, p1=message.from_user.id)
+    msg = app.send_message(message.chat.id, f'__Player 1 (X) : **{message.from_user.first_name}**__',
+    reply_markup=InlineKeyboardMarkup(
+    [[ InlineKeyboardButton( text='🤵 Player 2', callback_data="TTT P2")],
+     [ InlineKeyboardButton( text='🤖 v/s AI', callback_data="TTT AI")]]))
+    tictactoe.TTTstoredata(msg.id, p1=message.from_user.id)
 
 
 # Guess Game

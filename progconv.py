@@ -8,8 +8,7 @@ c4go = 'c4go'
 def c2Go(cfile):
     cmd = f'{c4go} transpile {cfile}'
     os.system(cmd)
-    gofile = cfile.split("/")[-1].replace(".c",".go")
-    return gofile
+    return cfile.split("/")[-1].replace(".c",".go")
 
 
 def py2Many(pyfile,lang="cpp"):
@@ -18,11 +17,10 @@ def py2Many(pyfile,lang="cpp"):
     for i in range(len(langs)):
         if lang == langs[i]:
             ext = extensions[i]
-  
+
     cmd = f'py2many --{lang}=1 {pyfile}'
     os.system(cmd)
-    file = pyfile.replace(".py", ext)
-    return file
+    return pyfile.replace(".py", ext)
 
 
 def java2JSandTS(javacode,lang="JS"):
@@ -44,9 +42,6 @@ def java2JSandTS(javacode,lang="JS"):
 
     res = requests.post('https://sandbox.jsweet.org/transpile',  headers=headers, data=data).json()
     if res["success"] == True:
-        if lang == "JS":
-            return 1,res["jsout"]
-        else:
-            return 1,res["tsout"]
+        return (1, res["jsout"]) if lang == "JS" else (1, res["tsout"])
     else:
         return 0,res["errors"]

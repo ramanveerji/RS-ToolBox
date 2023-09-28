@@ -18,26 +18,20 @@ def printNumbers(numList,N): # print the numbers from the given list
 
             if numList[ele] > N: # if number exceeds Max number
                 return # then stop
-            
+
             num = str(numList[ele]).zfill(len(str(N))-1)
-            display = display + f"{num}    " # displaying
-            ele = ele + 1
-            i = i + 1
+            display = f"{display}{num}    "
+            ele += 1
+            i += 1
 
         display = display + "\n" # line break
-	
+
     #print(display) # print
     return display # return
 
 def generateNumbers(i,N,size): # genrates the numbers to display based on the "i" input
 
-    numList = [] # declaring
-
-    for j in range(1,N+1): # from 1 to Max limit
-
-        if int(decimalToBinary(j,size)[-i]): # if i'th charcter from reverse in binary is 1?
-            numList.append(j) # then append to the list
-            
+    numList = [j for j in range(1,N+1) if int(decimalToBinary(j,size)[-i])]
     return printNumbers(numList,N) # calling print list
 
 
@@ -46,12 +40,7 @@ def finalize(binary,N): # does the final job
     binary = binary[::-1][:-1] # reversing the string and removing the first character
     number = binaryToDecimal(binary) # getting final decimal number from binary
 
-    if number == 0 or number > N:
-        #print(f"\t\tI said in between 1 - {N}\n") # number not in the list
-        return 0
-    else:
-        #print("\t\tYour number is",number,"\n") # final answer
-        return number
+    return 0 if number == 0 or number > N else number
     
 
 def main(): # main function
@@ -79,10 +68,10 @@ def main(): # main function
         print("\n") 
 
         take = input("is your number in this list? 0 for No & 1 for Yes : ") # taking input
-        while not (take == "0" or take == "1"):
+        while take not in ["0", "1"]:
             print("\nWrong Input, Enter Input Again")
             take = input("is your number in this list? 0 for No & 1 for Yes : ")
-            
+
         binarylist[i] = take # adding to the list
         print("\n")
 

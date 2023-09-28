@@ -11,10 +11,7 @@ def maths(exp):
     aeval(f'x = {exp}')
     aeval('print(x)')
     res = output.getvalue()
-    if res == "":
-        return None
-    else:
-        return res
+    return None if res == "" else res
     
 
 def timeanddate():
@@ -37,14 +34,10 @@ def pyrun(code):
     aeval = Interpreter(writer=output,err_writer=error)
     aeval(code)
     res = output.getvalue()
-    if res == "":
-        er = error.getvalue()
-        if er == "":
-            return "__Nothing is Printed to STDOUT__"
-        else:
-            return er
-    else:
+    if res != "":
         return res
+    er = error.getvalue()
+    return "__Nothing is Printed to STDOUT__" if er == "" else er
 
 
 def b64e(string):
