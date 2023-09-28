@@ -31,9 +31,9 @@ def bg_remove(file):
 	response = requests.post(url, data=payload).json()
 	data = response["data"][0].split(",")[1]
 	image = base64.b64decode(data)
-	with open(name + "_bg_removed." + ext, "wb") as f: f.write(image)
+	with open(f"{name}_bg_removed.{ext}", "wb") as f: f.write(image)
 
-	return name + "_bg_removed." + ext
+	return f"{name}_bg_removed.{ext}"
 
 
 ############################################################################################################
@@ -46,14 +46,14 @@ def riffusion(prompt):
 			ws = create_connection("wss://fffiloni-spectrogram-to-music.hf.space/queue/join")
 			break
 		except: pass
-		
+
 	ws.recv()
 	ws.send('{"session_hash":"'+ "nothing" +'","fn_index":0}')
 
 	while True:
 			result =  json.loads(ws.recv())
 			if result["msg"] != "estimation": break
-		
+
 	ws.send('{"fn_index":0,"data":["' + prompt + '","",null,10],"session_hash":"nothing"}')
 	result = ws.recv()
 	result =  json.loads(ws.recv())
@@ -61,11 +61,11 @@ def riffusion(prompt):
 
 	name = "".join( x for x in prompt if (x.isalnum() or x in " "))
 	image = base64.b64decode(result["output"]["data"][0].split(",")[1])
-	with open(name + ".jpeg","wb") as f: f.write(image)
+	with open(f"{name}.jpeg", "wb") as f: f.write(image)
 	music = requests.get("https://fffiloni-spectrogram-to-music.hf.space/file=" + result["output"]["data"][1]["name"])
-	with open(name + ".wav","wb") as f: f.write(music.content)
+	with open(f"{name}.wav", "wb") as f: f.write(music.content)
 
-	return name+".wav", name+".jpeg"
+	return f"{name}.wav", f"{name}.jpeg"
 
 
 ############################################################################################################
@@ -100,8 +100,7 @@ def bloom(para,AutoCall=True):
 	hash = response["hash"]
 	#queue_position = str(response["queue_position"])
 
-	if AutoCall: return bloomstatus(hash, headers)
-	else: return hash
+	return bloomstatus(hash, headers) if AutoCall else hash
 
 
 def bloomstatus(hash, headers):
@@ -110,21 +109,17 @@ def bloomstatus(hash, headers):
 	response = requests.post('https://huggingface-bloom-demo.hf.space/api/queue/status/',headers=headers,json=json_data,).json()
 	status = response["status"]
 	#print("Status : " + status)
-	
+
 	while status != "COMPLETE":
 		if status == "FAILED": return None
 		if status == "QUEUED":
 			queue_position = str(response["data"])
 			# print("Queue Position : " + queue_position)
-		if status == "PENDING":
-			pass
-			# print("Your job is processing")
-		
 		time.sleep(5)
 		response = requests.post('https://huggingface-bloom-demo.hf.space/api/queue/status/',headers=headers,json=json_data,).json()
 		status = response["status"]
-		#print("Status : " + status)
-	
+			#print("Status : " + status)
+
 	return response["data"]["data"][1]
 
 
@@ -141,24 +136,23 @@ def chatWithAI(msg, hash, rec_count=0):
 			ws = create_connection("wss://tloen-alpaca-lora.hf.space/queue/join")
 			break
 		except: pass
-	
+
 	ws.recv()
 	ws.send('{"fn_index":0,"session_hash":"' + hash +'"}')
-	
+
 	while True:
 		result =  json.loads(ws.recv())
 		if result["msg"] != "estimation": break
-	
+
 	ws.send('{"fn_index":0,"data":["","' + msg + '",0.1,0.75,40,4,512],"event_data":null,"session_hash":"' + hash + '"}')
 	ws.recv()
 	result =  json.loads(ws.recv())
 	ws.close()
-	
+
 	if not result["success"]: return None
 	final = result["output"]["data"][0]
 	if final in ["",'<p>.</p>\n',None]:
-		if rec_count == 3: return None
-		else: return chatWithAI(msg, hash, rec_count+1)
+		return None if rec_count == 3 else chatWithAI(msg, hash, rec_count+1)
 	else: return final
 
 ############################################################################################################
@@ -247,7 +241,7 @@ def whisper(file):
 
 	with open(file,"rb") as byte:
 		rdata = base64.b64encode(byte.read()).decode('utf-8')
-	rdata = "data:audio/mp3;base64," + rdata
+	rdata = f"data:audio/mp3;base64,{rdata}"
 
 	payload = json.dumps({ "data": [{
 											"name": file.split("/")[-1],
@@ -296,14 +290,10 @@ def mindalle(prompt,AutoCall=True):
 
 	hash = response["hash"]
 	queue_position = str(response["queue_position"])
-	
+
 	#print("Hash : " + hash)
 	#print("Queue Postion : " + queue_position)
-	if AutoCall:
-		filepath = mindallestatus(hash,prompt)
-		return filepath
-	else:
-		return hash
+	return mindallestatus(hash,prompt) if AutoCall else hash
 
 
 def mindallestatus(hash,prompt="min-dalle"):
@@ -327,29 +317,29 @@ def mindallestatus(hash,prompt="min-dalle"):
 	"sec-fetch-site": "same-origin",
 	"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" 
 					}
-	
+
 	payload = json.dumps({ "hash": hash })
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 
 	status = response["status"]
-	print("Status : " + status)
+	print(f"Status : {status}")
 
 	while status != "COMPLETE":
 
-		if status == "QUEUED":
-			queue_position = str(response["data"])
-			print("Queue Position : " + queue_position)
-
 		if status == "PENDING":
 			print("Your job is processing")
+
+		elif status == "QUEUED":
+			queue_position = str(response["data"])
+			print(f"Queue Position : {queue_position}")
 
 		time.sleep(20)
 
 		response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 		status = response["status"]
-		#print("Status : " + status)
+			#print("Status : " + status)
 
-	
+
 	data = response["data"]["data"][0].split(",")[1]
 	image = base64.b64decode(data)
 	with open(f"{prompt}.jpeg","wb") as file:
@@ -428,11 +418,7 @@ def stablediff(prompt,AutoCall=True):
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 	hash = response["hash"]
 
-	if AutoCall:
-		filepath = stablediffstatus(hash,prompt)
-		return filepath
-	else:
-		return hash
+	return stablediffstatus(hash,prompt) if AutoCall else hash
 
 
 def stablediffstatus(hash,prompt="stable-diff"):
@@ -458,32 +444,32 @@ def stablediffstatus(hash,prompt="stable-diff"):
 
 	payload = json.dumps({ "hash": hash })
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
-	
+
 	status = response["status"]
-	print("Status : " + status)
-	
+	print(f"Status : {status}")
+
 	while status != "COMPLETE":
 		
-		if status == "QUEUED":
-			queue_position = str(response["data"])
-			print("Queue Position : " + queue_position)
-			
 		if status == "PENDING":
 			print("Your job is processing")
-			
+
+		elif status == "QUEUED":
+			queue_position = str(response["data"])
+			print(f"Queue Position : {queue_position}")
+
 		time.sleep(10)
-		
+
 		response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 		status = response["status"]
 
 	data = response["data"]["data"][0]
-	if data == None:
+	if data is None:
 		return None
 	data = data.split(",")[1]
 	image = base64.b64decode(data)
 	with open(f"{prompt}.png","wb") as file:
 		file.write(image)
-	
+
 	return f"{prompt}.png"
 
 
@@ -504,8 +490,7 @@ def deoldifyurl(url):
 	payload = json.dumps({ "data": [ url ] })
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 
-	link = response["data"][0]
-	return link
+	return response["data"][0]
 
 
 def deoldify(file,fileto="colored.jpeg"):
@@ -514,7 +499,7 @@ def deoldify(file,fileto="colored.jpeg"):
 	#reqUrl = "https://hf.space/embed/geraltofrivia/deoldify_videos/api/predict"
 	#reqUrl = "https://hf.space/embed/ecarbo/deoldify-demo/api/predict/"
 	reqUrl = "https://hf.space/embed/PaddlePaddle/deoldify/api/predict/"
-	
+
 	headersList = {
 	"Accept": "*/*",
 	"User-Agent": "Thunder Client (https://www.thunderclient.com)",
@@ -523,7 +508,7 @@ def deoldify(file,fileto="colored.jpeg"):
 
 	with open(file,"rb") as byte:
 		rdata = base64.b64encode(byte.read()).decode('utf-8')
-	rdata = "data:image/jpeg;base64," + rdata
+	rdata = f"data:image/jpeg;base64,{rdata}"
 
 	payload = json.dumps({ "data": [rdata] })
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
@@ -545,8 +530,7 @@ def reverse_rgb(image):
 
 def equalize_adaptive_histogram(image, clipLimit=2.0, tileGridSize=8):
 	clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize, tileGridSize))
-	equalized = clahe.apply(image)
-	return equalized
+	return clahe.apply(image)
 
 def on_trackbar():
 	global out_image
@@ -679,14 +663,10 @@ def latdif(prompt, AutoCall=True):
 
 	hash = response["hash"]
 	queue_position = str(response["queue_position"])
-	
+
 	#print("Hash : " + hash)
 	#print("Queue Postion : " + queue_position)
-	if AutoCall:
-		filepath = latdifstatus(hash,prompt)
-		return filepath
-	else:
-		return hash
+	return latdifstatus(hash,prompt) if AutoCall else hash
 
 
 def latdifstatus(hash, prompt="latentdiffusion"):
@@ -714,22 +694,22 @@ def latdifstatus(hash, prompt="latentdiffusion"):
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 
 	status = response["status"]
-	print("Status : " + status)
+	print(f"Status : {status}")
 
 	while status != "COMPLETE":
 
-		if status == "QUEUED":
-			queue_position = str(response["data"])
-			print("Queue Position : " + queue_position)
-
 		if status == "PENDING":
 			print("Your job is processing")
+
+		elif status == "QUEUED":
+			queue_position = str(response["data"])
+			print(f"Queue Position : {queue_position}")
 
 		time.sleep(10)
 
 		response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 		status = response["status"]
-		#print("Status : " + status)
+			#print("Status : " + status)
 
 	imagelist = []
 	for i in range(4):
@@ -896,15 +876,11 @@ def cogvideo(prompt,AutoCall=True):
 
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 	hash = response["hash"]
-	queue_position = str(response["queue_position"])
-	
-	#print("Hash : " + hash)
-	#print("Queue Postion : " + queue_position)
 	if AutoCall:
-		filepath = cogvideostatus(hash,prompt)
-		return filepath
-	else:
-		return hash, int(queue_position)
+		return cogvideostatus(hash,prompt)
+	queue_position = str(response["queue_position"])
+
+	return hash, int(queue_position)
 
 
 def cogvideostatus(hash,prompt="cogvideo"):
@@ -932,22 +908,22 @@ def cogvideostatus(hash,prompt="cogvideo"):
 	response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 
 	status = response["status"]
-	print("Status : " + status)
+	print(f"Status : {status}")
 
 	while status != "COMPLETE":
 
-		if status == "QUEUED":
-			queue_position = str(response["data"])
-			print("Queue Position : " + queue_position)
-
 		if status == "PENDING":
 			print("Your job is processing")
+
+		elif status == "QUEUED":
+			queue_position = str(response["data"])
+			print(f"Queue Position : {queue_position}")
 
 		time.sleep(20)
 
 		response = requests.request("POST", reqUrl, data=payload,  headers=headersList).json()
 		status = response["status"]
-		#print("Status : " + status)
+			#print("Status : " + status)
 
 	data = response["data"]["data"][1]["data"].split(",")[1]
 	video = base64.b64decode(data)

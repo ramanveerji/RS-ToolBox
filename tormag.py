@@ -15,7 +15,7 @@ def bencode(elem):
     if type(elem) == bytes:
         result = str.encode(str(len(elem)))+b":"+elem
     elif type(elem) == int:
-        result = str.encode("i"+str(elem)+"e")
+        result = str.encode(f"i{str(elem)}e")
     elif type(elem) == list:
         result = b"l"
         for item in elem:
@@ -77,40 +77,35 @@ def bdecode(bytestr, recursiveCall=False):
                 elif curtype == dict:
                     result = collections.OrderedDict()
             else:
-                raise ValueError("Expected starting char, got ‘"+bytes.decode(char)+"’")
+                raise ValueError(f"Expected starting char, got ‘{bytes.decode(char)}’")
 
-        else: # if started
-
-            if not char == b"e":
-
-                if curtype == int:
-                    bytestr = bytestr[1:]
-                    numstring += char
-
-                elif curtype == list:
-                    item, bytestr = bdecode(bytestr, recursiveCall=True)
-                    result.append(item)
-
-                elif curtype == dict:
-
-                    if key == None:
-                        key, bytestr = bdecode(bytestr, recursiveCall=True)
-
-                    else:
-                        result[key], bytestr = bdecode(bytestr, recursiveCall=True)
-                        key = None
-
-            else: # ending: char == b"e"
-                bytestr = bytestr[1:]
-                if curtype == int:
-                    result = int(bytes.decode(numstring))
-                ended = True
-                break
-    if ended:
-        if recursiveCall:
-            return result, bytestr
+        elif char == b"e": # ending: char == b"e"
+            bytestr = bytestr[1:]
+            if curtype == int:
+                result = int(bytes.decode(numstring))
+            ended = True
+            break
         else:
-            return result
+
+            if curtype == int:
+                bytestr = bytestr[1:]
+                numstring += char
+
+            elif curtype == list:
+                item, bytestr = bdecode(bytestr, recursiveCall=True)
+                result.append(item)
+
+            elif curtype == dict:
+
+                if key is None:
+                    key, bytestr = bdecode(bytestr, recursiveCall=True)
+
+                else:
+                    result[key], bytestr = bdecode(bytestr, recursiveCall=True)
+                    key = None
+
+    if ended:
+        return (result, bytestr) if recursiveCall else result
     else:
         raise ValueError("String ended unexpectedly")
 
@@ -141,31 +136,28 @@ def getTorFile(maglink):
     id = maglink.split("magnet:?xt=urn:btih:")[1].split('&')[0]
     try:
         name = maglink.split('&dn=')[1].split("&tr=")[0]
-        name = decodeurl(name) + ".torrent"
+        name = f"{decodeurl(name)}.torrent"
         name = "".join( x for x in name if (x.isalnum() or x in "._-@ "))
     except:
-        name = id + ".torrent"
+        name = f"{id}.torrent"
     os.system(f"wget https://itorrents.org/torrent/{id}.torrent")
     os.rename(f'{id}.torrent',name)
     return name
 
 
 def getMagnet(filename):
-    file = open(filename, "br")
-    byte_stream = file.read()
-    file.close()
+    with open(filename, "br") as file:
+        byte_stream = file.read()
     torrentdic = bdecode(byte_stream)
 
-    result = []
     if "info" not in torrentdic:
         return ("No info dict in torrent file")
     encodedInfo = bencode(torrentdic["info"])
     sha1 = hashlib.sha1(encodedInfo).hexdigest()
-    result.append("xt=urn:btih:"+sha1)
-
+    result = [f"xt=urn:btih:{sha1}"]
     if "name" in torrentdic["info"]:
         quoted = urllib.parse.quote(torrentdic["info"]["name"], safe="")
-        result.append("dn="+quoted)
+        result.append(f"dn={quoted}")
 
     trackers = []
     if "announce-list" in torrentdic:
@@ -179,7 +171,7 @@ def getMagnet(filename):
         if [url] not in seen_urls:
             seen_urls.append([url])
             quoted = urllib.parse.quote(url, safe="")
-            result.append("tr="+quoted)
+            result.append(f"tr={quoted}")
     torrentdic["announce-list"] = seen_urls
 
     return "magnet:?" + "&".join(result)
