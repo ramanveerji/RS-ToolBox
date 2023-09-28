@@ -1,4 +1,4 @@
-FROM bipinkrish/file-converter:latest
+FROM ramanveerji/RS-ToolBox:latest
 RUN apt install iputils-ping -y
 
 COPY . .
